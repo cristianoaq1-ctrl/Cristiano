@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Dinâmico com Pastas</title>
+    <style>
+        /* Estilos Globais (Modo Claro Padrão) */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            overflow-x: hidden;
+            transition: background-color 0.4s, color 0.4s;
+        }
+
+        /* ---------------------------------- */
+        /* ESTILOS DO DARK MODE (MODO ESCURO) */
+        /* ---------------------------------- */
+        body.dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .section {
+            background-color: #1e1e1e;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+
+        body.dark-mode h1 {
+            color: #66b2ff;
+        }
+
+        /* Dark Mode para as Pastas do Drive */
+        body.dark-mode .drive-folder {
+            background-color: #2c2c2c;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .drive-folder:hover {
+            background-color: #3a3a3a;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+        }
+        /* ---------------------------------- */
+
+        /* Menu Lateral (Sidebar) */
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.4s;
+            padding-top: 60px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+        }
+
+        .sidebar a {
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 22px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #f1f1f1;
+            background-color: #333;
+            cursor: pointer;
+        }
+
+        .sidebar .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+            background: none;
+            border: none;
+            color: #818181;
+            cursor: pointer;
+        }
+
+        .sidebar .close-btn:hover {
+            color: white;
+        }
+
+        /* Conteúdo Principal */
+        #main-content {
+            transition: margin-left .4s;
+            padding: 20px;
+        }
+
+        /* Botões */
+        .open-btn, .theme-btn {
+            font-size: 16px;
+            cursor: pointer;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            position: fixed;
+            top: 20px;
+            transition: 0.3s;
+            z-index: 2;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .open-btn {
+            background-color: #007BFF;
+            left: 20px;
+        }
+
+        .open-btn:hover { background-color: #0056b3; transform: scale(1.05); }
+
+        .theme-btn {
+            background-color: #333;
+            right: 20px;
+        }
+
+        .theme-btn:hover { background-color: #555; }
+        body.dark-mode .theme-btn { background-color: #f4f4f9; color: #333; }
+
+        /* Seções Dinâmicas */
+        .section {
+            display: none;
+            background: white;
+            padding: 40px;
+            margin-top: 50px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            animation: fadeIn 0.5s ease-in-out;
+            transition: background-color 0.4s;
+        }
+
+        .section.active { display: block; }
+        h1 { color: #007BFF; transition: color 0.4s; }
+
+        /* ESTILOS DAS PASTAS DO DRIVE CENTRALIZADAS */
+        .home-content {
+            text-align: center; /* Centraliza o texto do início */
+        }
+
+        .drive-container {
+            display: flex;
+            justify-content: center; /* Centraliza as pastas na tela */
+            align-items: center;
+            gap: 20px; /* Espaço entre as pastas */
+            margin-top: 40px;
+            flex-wrap: wrap; /* Permite quebrar linha em telas pequenas */
+        }
+
+        .drive-folder {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            width: 130px;
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+            transition: transform 0.3s, box-shadow 0.3s, background-color 0.4s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .drive-folder:hover {
+            transform: translateY(-5px); /* Efeito de pular para cima */
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            background-color: #e9ecef;
+        }
+
+        .drive-folder span {
+            font-size: 50px; /* Tamanho do ícone da pasta */
+            margin-bottom: 10px;
+        }
+
+        /* Animação suave */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Menu Lateral (Sidebar) -->
+    <div id="mySidebar" class="sidebar">
+        <button class="close-btn" onclick="closeNav()">&times;</button>
+        <a onclick="showSection('home')">🏠 Início</a>
+        <a onclick="showSection('about')">📖 Sobre</a>
+        <a onclick="showSection('services')">⚙️ Serviços</a>
+        <a onclick="showSection('contact')">✉️ Contato</a>
+    </div>
+
+    <!-- Botões Superiores -->
+    <button id="menuBtn" class="open-btn" onclick="toggleNav()">&#9776; Menu</button>
+    <button id="themeBtn" class="theme-btn" onclick="toggleTheme()">🌙 Dark Mode</button>
+
+    <!-- Conteúdo Principal -->
+    <div id="main-content">
+        
+        <!-- PARTE 1: INÍCIO (AGORA COM AS PASTAS DO DRIVE) -->
+        <div id="home" class="section active home-content">
+            <h1>Acesso Rápido - Google Drive</h1>
+            <p>Selecione uma das pastas abaixo para ser redirecionado aos seus arquivos.</p>
+            
+            <!-- Contêiner das Pastas do Drive centralizadas -->
+            <div class="drive-container">
+                <!-- Pasta 1 -->
+                <a href="https://drive.google.com/" target="_blank" class="drive-folder">
+                    <span>📁</span>
+                    Projetos
+                </a>
+                
+                <!-- Pasta 2 -->
+                <a href="https://drive.google.com/" target="_blank" class="drive-folder">
+                    <span>📁</span>
+                    Relatórios
+                </a>
+                
+                <!-- Pasta 3 -->
+                <a href="https://drive.google.com/" target="_blank" class="drive-folder">
+                    <span>📁</span>
+                    Imagens
+                </a>
+                
+                <!-- Pasta 4 -->
+                <a href="https://drive.google.com/" target="_blank" class="drive-folder">
+                    <span>📁</span>
+                    Documentos
+                </a>
+            </div>
+        </div>
+
+        <div id="about" class="section">
+            <h1>Sobre Nós</h1>
+            <p>Somos uma empresa focada em criar interfaces dinâmicas e modernas utilizando as tecnologias web mais recentes.</p>
+        </div>
+
+        <div id="services" class="section">
+            <h1>Nossos Serviços</h1>
+            <ul>
+                <li>Desenvolvimento Web</li>
+                <li>Design de Interfaces (UI/UX)</li>
+                <li>Criação de Sistemas Dinâmicos</li>
+            </ul>
+        </div>
+
+        <div id="contact" class="section">
+            <h1>Entre em Contato</h1>
+            <p>Envie-nos um e-mail para: <b>contato@exemplo.com.br</b></p>
+            <p>Ou ligue para: <b>(11) 99999-9999</b></p>
+        </div>
+
+    </div>
+
+    <script>
+        let isNavOpen = false;
+
+        function toggleNav() {
+            if (isNavOpen) {
+                closeNav();
+            } else {
+                openNav();
+            }
+        }
+
+        function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main-content").style.marginLeft = "250px";
+            document.getElementById("menuBtn").style.left = "270px";
+            isNavOpen = true;
+        }
+
+        function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main-content").style.marginLeft = "0";
+            document.getElementById("menuBtn").style.left = "20px";
+            isNavOpen = false;
+        }
+
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            if (window.innerWidth < 768) {
+                closeNav();
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.getElementById('themeBtn');
+            if (document.body.classList.contains('dark-mode')) {
+                btn.innerHTML = '☀️ Light Mode';
+            } else {
+                btn.innerHTML = '🌙 Dark Mode';
+            }
+        }
+    </script>
+
+</body>
+</html>
